@@ -1,0 +1,51 @@
+:root {
+    --tile-size: 100px;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: sans-serif;
+  }
+  
+  #controls {
+    padding: 0.5em;
+    background: #fafafa;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  #controls button { margin-right: 0.5em; }
+  
+  #canvas {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 50px);
+    background: #ecf0f1;
+    overflow: hidden;
+  }
+  
+  .tile {
+    position: absolute;
+    width: var(--tile-size);
+    height: var(--tile-size);
+    box-sizing: border-box;
+    border: 2px solid #333;
+    border-radius: 4px;
+    cursor: grab;
+    user-select: none;
+    overflow: hidden;
+    transition: left .2s, top .2s;
+  }
+  
+  .tile.locked { opacity: 0.5; cursor: default; }
+  
+  .tile-btn {
+    position: absolute;
+    background: rgba(255,255,255,0.8);
+    border: none;
+    padding: 0.2em;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  .lock-btn { top: 4px; right: 4px; }

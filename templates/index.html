@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Carpet Tile Designer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <div id="controls">
+    <button id="importBtn">Import Folder</button>
+    <input
+      type="file"
+      id="folder-input"
+      webkitdirectory
+      directory
+      multiple
+      accept="image/png"
+      style="display:none"
+    >
+    <button id="sortBtn">Sort Tiles</button>
+    <button id="exportBtn">Export as Image</button>
+  </div>
+
+  <div id="canvas"></div>
+  <canvas id="export-canvas" style="display:none"></canvas>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

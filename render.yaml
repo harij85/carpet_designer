@@ -1,0 +1,12 @@
+# Render service definition for free web service
+services:
+  - type: web
+    name: carpet-designer
+    env: python
+    region: oregon # or your preferred region
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
