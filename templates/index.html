@@ -7,24 +7,24 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
   <div id="controls">
-    <button id="importBtn">Import Folder</button>
-    <input
-      type="file"
-      id="folder-input"
-      webkitdirectory
-      directory
-      multiple
-      accept="image/png"
-      style="display:none"
-    >
+    <label>Cols: <input type="number" id="grid-cols" value="10" min="1"></label>
+    <label>Rows: <input type="number" id="grid-rows" value="10" min="1"></label>
+    <button id="setGridBtn">Set Grid</button>
+    <button id="zoomInBtn">➕ Zoom In</button>
+    <button id="zoomOutBtn">➖ Zoom Out</button>
+    <button id="importBtn">Select Folder</button>
+    <input type="file" id="folder-input" webkitdirectory multiple accept="image/png" hidden>
     <button id="sortBtn">Sort Tiles</button>
-    <button id="exportBtn">Export as Image</button>
+    <button id="exportBtn">Export PNG</button>
+    <button id="exportCSVBtn">Export CSV</button>
   </div>
 
-  <div id="canvas"></div>
-  <canvas id="export-canvas" style="display:none"></canvas>
+  <div id="canvas-container">
+    <canvas id="grid-canvas"></canvas>
+    <div id="canvas" class="drop-zone"></div>
+  </div>
+  <canvas id="export-canvas" hidden></canvas>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
