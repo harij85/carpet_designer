@@ -1,30 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Carpet Tile Designer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+<style> 
+
+    li {
+        list-style: none;
+    }
+</style>
 <body>
   <div id="controls">
-    <label>Cols: <input type="number" id="grid-cols" value="10" min="1"></label>
-    <label>Rows: <input type="number" id="grid-rows" value="10" min="1"></label>
+    <label>Cols: <input type="number" id="grid-cols" value="4" min="1"></label>
+    <label>Rows: <input type="number" id="grid-rows" value="4" min="1"></label>
+    
+
     <button id="setGridBtn">Set Grid</button>
-    <button id="zoomInBtn">➕ Zoom In</button>
-    <button id="zoomOutBtn">➖ Zoom Out</button>
-    <button id="importBtn">Select Folder</button>
+    <label for="opacityRange">Tile Opacity:</label>
+    <input type="range" id="opacityRange" min="0.1" max="1" step="0.1" value="1">
+    <button id="zoomInBtn">➕</button>
+    <button id="zoomOutBtn">➖</button>
+    <button id="importBtn">📁 Import</button>
     <input type="file" id="folder-input" webkitdirectory multiple accept="image/png" hidden>
-    <button id="sortBtn">Sort Tiles</button>
-    <button id="exportBtn">Export PNG</button>
-    <button id="exportCSVBtn">Export CSV</button>
+
+    <button id="savePresetBtn">💾 Save Preset</button>
+    <select id="presetList"><option value="">Load Preset</option></select>
+
+    <button id="helpBtn">❔ Help</button>
+    <button id="exportCSVBtn">⬇️ Export CSV</button>
   </div>
 
   <div id="canvas-container">
     <canvas id="grid-canvas"></canvas>
     <div id="canvas" class="drop-zone"></div>
   </div>
-  <canvas id="export-canvas" hidden></canvas>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal hidden">
+    <div class="modal-content">
+      <span id="closeHelp" class="close">×</span>
+      <h2>Instructions</h2>
+      <ul>
+        <li>1. Set grid size (Cols: x Rows: y) Click set grid. </li>
+        <li>2. Import folder of pngs. Best practice is to name pngs tile_1.png, tile_2.png etc</li>
+        
+        <li>3. Use the opacity slider to toggle number/design visibility.</li>
+        <li>4. Drag tiles (or lock them to freeze). Use + - toggles to zoom. Pinch to zoom on touch devices.</li>
+        <li>---To swap tile positions make sure both tiles are unlocked.</li> 
+        <li>---Drag the tile you wish to move onto the tile you wish to replace and hold for 2s.</li>
+        <li>5. Save/Load presets for layouts. You will have to import tiles first before seeing the preset load.</li>
+        <li>6. Export layout as CSV. You can use this to arrange your carpet</li>
+      </ul>
+    </div>
+  </div>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
