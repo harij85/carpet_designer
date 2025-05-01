@@ -25,7 +25,7 @@
   .tile.locked { opacity:.5; cursor:default; }
   .tile-btn {
     position:absolute; top:4px; right:4px;
-    background:rgba(255, 0, 0, 0); border:none; padding:.2em;
+    background:rgba(255, 0, 0, 0.7); border:none; padding:.2em;
     font-size:1em; cursor:pointer; 
   }
   /* Help Modal */
