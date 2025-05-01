@@ -48,10 +48,10 @@
   .modal.hidden { display: none; }
   
   /* opacity slider styling (optional) */
-  #opacityRange {
+  /*#opacityRange {
     width: 100px;
     margin-left: 0.5em;
-  }
+  }*/
   
   .close { position:absolute; top:.5em; right:.5em; cursor:pointer; }
   @media (max-width:600px) {
