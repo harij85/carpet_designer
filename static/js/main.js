@@ -1,270 +1,236 @@
-const BASE_TILE_SIZE = 240;  // px per cell at zoom=1
-const ZOOM_STEP = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom-step'));
-let zoomLevel = 1;
+// static/js/main.js
 
-function getTileSize() {
-  return BASE_TILE_SIZE * zoomLevel;
-}
+// SVG icons for lock states
+const LOCK_CLOSED_SVG = '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+const LOCK_OPEN_SVG   = '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+
+// Configuration
+const BASE_TILE_SIZE = 240;
+const ZOOM_STEP = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom-step'));
+let zoomLevel = 0.75;
+let cols = 4, rows = 4, tileCounter = 0;
+let activeTile = null, offsetX = 0, offsetY = 0, hoverTimer = null;
+const presets = JSON.parse(localStorage.getItem('presets') || '{}');
 
 document.addEventListener('DOMContentLoaded', () => {
-  const gridCanvas   = document.getElementById('grid-canvas');
-  const container    = document.getElementById('canvas-container');
-  const canvas       = document.getElementById('canvas');
-  const importBtn    = document.getElementById('importBtn');
-  const folderInput  = document.getElementById('folder-input');
-  const setGridBtn   = document.getElementById('setGridBtn');
-  const zoomInBtn    = document.getElementById('zoomInBtn');
-  const zoomOutBtn   = document.getElementById('zoomOutBtn');
-  const sortBtn      = document.getElementById('sortBtn');
-  const exportBtn    = document.getElementById('exportBtn');
-  const exportCSVBtn = document.getElementById('exportCSVBtn');
-  const exportCanvas = document.getElementById('export-canvas');
+  const $ = sel => document.querySelector(sel);
+  const gridCanvas   = $('#grid-canvas');
+  const canvas       = $('#canvas');
+  const container    = $('#canvas-container');
+  const opacityRange = $('#opacityRange');
+  const controls = {
+    importBtn:     $('#importBtn'),
+    folderInput:   $('#folder-input'),
+    setGridBtn:    $('#setGridBtn'),
+    zoomInBtn:     $('#zoomInBtn'),
+    zoomOutBtn:    $('#zoomOutBtn'),
+    savePresetBtn: $('#savePresetBtn'),
+    presetList:    $('#presetList'),
+    helpBtn:       $('#helpBtn'),
+    closeHelp:     $('#closeHelp'),
+    exportCSVBtn:  $('#exportCSVBtn'),
+  };
 
-  let cols = 10, rows = 10;
-  let tileCounter = 0;
-  let activeTile = null, offsetX = 0, offsetY = 0, hoverTimer = null;
+  // Help modal
+  controls.helpBtn?.addEventListener('click', () => $('#helpModal').classList.remove('hidden'));
+  controls.closeHelp?.addEventListener('click', () => $('#helpModal').classList.add('hidden'));
+  $('#helpModal')?.addEventListener('click', e => { if (e.target.id === 'helpModal') e.target.classList.add('hidden'); });
 
-  // Zoom controls
-  zoomInBtn.addEventListener('click', () => setZoom(zoomLevel + ZOOM_STEP));
-  zoomOutBtn.addEventListener('click', () => setZoom(zoomLevel - ZOOM_STEP));
-
-  function setZoom(z) {
-    zoomLevel = Math.max(0.1, z);
-    document.documentElement.style.setProperty('--tile-size', `${getTileSize()}px`);
-    redrawGridAndTiles();
-  }
-
-  function redrawGridAndTiles() {
-    drawGrid();
-    document.querySelectorAll('.tile').forEach(tile => {
-      const col = +tile.dataset.col;
-      const row = +tile.dataset.row;
-      const sz = getTileSize();
-      tile.style.left = `${col * sz}px`;
-      tile.style.top  = `${row * sz}px`;
-    });
-  }
-
-  // Grid setup
-  setGridBtn.addEventListener('click', () => {
-    cols = +document.getElementById('grid-cols').value;
-    rows = +document.getElementById('grid-rows').value;
-    canvas.innerHTML = '';
-    tileCounter = 0;
-    drawGrid();
+  // Opacity slider
+  opacityRange?.addEventListener('input', e => {
+    document.querySelectorAll('.tile').forEach(t => t.style.opacity = e.target.value);
   });
 
+  // Preset management
+  function refreshPresets() {
+    const sel = controls.presetList;
+    sel.innerHTML = '<option value="">Load Preset</option>';
+    Object.keys(presets).forEach(name => {
+      const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  }
+  refreshPresets();
+
+  controls.savePresetBtn.addEventListener('click', () => {
+    const name = prompt('Preset name:'); if (!name) return;
+    presets[name] = Array.from(canvas.querySelectorAll('.tile')).map(t => ({
+      id: t.dataset.id, name: t.dataset.name,
+      col: +t.dataset.col, row: +t.dataset.row
+    }));
+    try { localStorage.setItem('presets', JSON.stringify(presets)); }
+    catch (err) { if (err.name === 'QuotaExceededError') { alert('Storage full'); delete presets[name]; } else throw err; }
+    refreshPresets();
+  });
+
+  controls.presetList.addEventListener('change', e => {
+    const data = presets[e.target.value]; if (!data) return;
+    data.forEach(item => {
+      const tile = document.querySelector(`.tile[data-id='${item.id}']`);
+      if (tile) { tile.dataset.col = item.col; tile.dataset.row = item.row; }
+    });
+    redraw();
+  });
+
+  // Zoom
+  controls.zoomInBtn.addEventListener('click',  () => setZoom(zoomLevel + ZOOM_STEP));
+  controls.zoomOutBtn.addEventListener('click', () => setZoom(zoomLevel - ZOOM_STEP));
+
+  function getTileSize() { return BASE_TILE_SIZE * zoomLevel; }
+  function setZoom(z) { zoomLevel = Math.max(0.1, z); document.documentElement.style.setProperty('--tile-size', `${getTileSize()}px`); redraw(); }
+
+  // Grid setup
+  controls.setGridBtn.addEventListener('click', () => {
+    cols = +$('#grid-cols').value; rows = +$('#grid-rows').value;
+    tileCounter = 0; canvas.innerHTML = ''; drawGrid();
+  });
+
+  // Draw grid
   function drawGrid() {
     const sz = getTileSize();
-    gridCanvas.width  = cols * sz;
-    gridCanvas.height = rows * sz;
-    gridCanvas.style.width  = `${gridCanvas.width}px`;
-    gridCanvas.style.height = `${gridCanvas.height}px`;
-    canvas.style.width      = `${gridCanvas.width}px`;
-    canvas.style.height     = `${gridCanvas.height}px`;
-
-    const ctx = gridCanvas.getContext('2d');
-    ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-    ctx.strokeStyle = '#999';
-    ctx.lineWidth   = 1;
-    ctx.font        = '16px sans-serif';
-    ctx.fillStyle   = '#555';
-    let num = 1;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const x = c * sz, y = r * sz;
-        ctx.strokeRect(x, y, sz, sz);
-        // center-align the number
-        const text = String(num++);
-        const metrics = ctx.measureText(text);
-        const textWidth = metrics.width;
-        const fontSize = 16;
-        const tx = x + (sz - textWidth) / 2;
-        const ty = y + (sz + fontSize) / 2 - 2;
-        ctx.fillText(text, tx, ty);
-      }
+    gridCanvas.width = cols * sz; gridCanvas.height = rows * sz;
+    gridCanvas.style.width = `${cols * sz}px`; gridCanvas.style.height = `${rows * sz}px`;
+    canvas.style.width = `${cols * sz}px`; canvas.style.height = `${rows * sz}px`;
+    const ctx = gridCanvas.getContext('2d'); ctx.clearRect(0,0,gridCanvas.width,gridCanvas.height);
+    ctx.strokeStyle='#999'; ctx.lineWidth=1; ctx.font='16px sans-serif'; ctx.fillStyle='#555';
+    let num=1;
+    for (let r=0; r<rows; r++) for (let c=0; c<cols; c++) {
+      const x=c*sz, y=r*sz; ctx.strokeRect(x,y,sz,sz);
+      const text=String(num++), m=ctx.measureText(text);
+      ctx.fillText(text, x+(sz-m.width)/2, y+(sz+16)/2-2);
     }
   }
   drawGrid();
 
-  // Import via button
-  importBtn.addEventListener('click', () => folderInput.click());
-  folderInput.addEventListener('change', e => {
-    Array.from(e.target.files)
-      .filter(f => f.type === 'image/png')
-      .forEach(f => fileToTile(f));
-    folderInput.value = '';
-  });
-
-  // Drag & drop import
-  ['dragenter', 'dragover'].forEach(evt => canvas.addEventListener(evt, e => { e.preventDefault(); canvas.classList.add('drag-over'); }));
-  ['dragleave', 'drop'].forEach(evt => canvas.addEventListener(evt, e => { e.preventDefault(); canvas.classList.remove('drag-over'); }));
-  canvas.addEventListener('drop', e => {
-    const items = e.dataTransfer.items;
-    for (let i = 0; i < items.length; i++) {
-      const entry = items[i].webkitGetAsEntry();
-      if (entry) traverse(entry);
-    }
-  });
-
-  function traverse(entry) {
-    if (entry.isFile) entry.file(f => { if (f.type === 'image/png') fileToTile(f); });
-    else entry.createReader().readEntries(en => en.forEach(traverse));
-  }
-
-  function fileToTile(file) {
-    const reader = new FileReader();
-    reader.onload = ev => createTile(ev.target.result);
-    reader.readAsDataURL(file);
-  }
-
-  // Create tile
-  function createTile(src) {
-    const id = ++tileCounter;
-    const tile = document.createElement('div');
-    tile.className            = 'tile';
-    tile.dataset.id           = id;
-    tile.dataset.name         = `tile_${id}`;
-    tile.dataset.locked       = 'false';
-    tile.style.backgroundImage = `url(${src})`;
-
-    const {col, row} = findFree(0, 0);
-    const sz = getTileSize();
-    tile.dataset.col = col;
-    tile.dataset.row = row;
-    tile.style.left = `${col * sz}px`;
-    tile.style.top  = `${row * sz}px`;
-
-    const lb = document.createElement('button');
-    lb.className = 'tile-btn lock-btn';
-    lb.textContent = '🔒';
-    tile.appendChild(lb);
-    canvas.appendChild(tile);
-    attachEvents(tile);
-  }
-
-  // Attach events
-  function attachEvents(tile) {
-    tile.addEventListener('mousedown', e => {
-      if (tile.dataset.locked === 'true') return;
-      activeTile = tile;
-      const sz = getTileSize();
-      offsetX     = e.clientX - tile.offsetLeft;
-      offsetY     = e.clientY - tile.offsetTop;
-      tile.style.cursor = 'grabbing';
-      tile.style.zIndex = 1000;
-    });
-    tile.querySelector('.lock-btn').addEventListener('click', e => {
-      e.stopPropagation();
-      const locked = tile.dataset.locked === 'true';
-      tile.dataset.locked = (!locked).toString();
-      tile.classList.toggle('locked');
-      e.currentTarget.textContent = locked ? '🔒' : '🔓';
+  // Redraw
+  function redraw() {
+    drawGrid(); const op = opacityRange?.value || 1;
+    document.querySelectorAll('.tile').forEach(tile => {
+      const sz=getTileSize(), col=+tile.dataset.col, row=+tile.dataset.row;
+      Object.assign(tile.style, {
+        left: `${col*sz}px`, top: `${row*sz}px`,
+        width: `${sz}px`, height: `${sz}px`, opacity: op
+      });
     });
   }
 
-  // Drag move & drop
-  document.addEventListener('mousemove', e => {
-    if (!activeTile) return;
-    const sz = getTileSize();
-    let x = e.clientX - offsetX;
-    let y = e.clientY - offsetY;
-    x = Math.max(0, Math.min(x, cols * sz - sz));
-    y = Math.max(0, Math.min(y, rows * sz - sz));
-    activeTile.style.left = `${x}px`;
-    activeTile.style.top  = `${y}px`;
-    clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(() => {
-      const c = Math.round(x / sz);
-      const r = Math.round(y / sz);
-      const hit = Array.from(canvas.querySelectorAll('.tile')).find(t =>
-        +t.dataset.col === c && +t.dataset.row === r && t !== activeTile && t.dataset.locked === 'false'
-      );
-      if (hit) {
-        const dest = findFree(c, r, activeTile);
-        hit.dataset.col = dest.col;
-        hit.dataset.row = dest.row;
-        hit.style.left = `${dest.col * sz}px`;
-        hit.style.top  = `${dest.row * sz}px`;
-      }
-    }, 2000);
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (!activeTile) return;
-    clearTimeout(hoverTimer);
-    const sz = getTileSize();
-    const c = Math.round(parseInt(activeTile.style.left) / sz);
-    const r = Math.round(parseInt(activeTile.style.top)  / sz);
-    const dest = findFree(c, r, activeTile);
-    const hit = Array.from(canvas.querySelectorAll('.tile')).find(t =>
-      +t.dataset.col === dest.col && +t.dataset.row === dest.row && t !== activeTile && t.dataset.locked === 'false'
-    );
-    if (hit) {
-      const alt = findFree(dest.col, dest.row, activeTile);
-      hit.dataset.col = alt.col;
-      hit.dataset.row = alt.row;
-      hit.style.left = `${alt.col * sz}px`;
-      hit.style.top  = `${alt.row * sz}px`;
-    }
-    activeTile.dataset.col = dest.col;
-    activeTile.dataset.row = dest.row;
-    activeTile.style.left = `${dest.col * sz}px`;
-    activeTile.style.top  = `${dest.row * sz}px`;
-    activeTile.style.cursor = 'grab';
-    activeTile.style.zIndex = '';
-    activeTile = null;
-  });
-
-  // Sort tiles
-  sortBtn.addEventListener('click', () => {
-    const tiles = Array.from(canvas.querySelectorAll('.tile')).sort((a, b) => +a.dataset.id - +b.dataset.id);
-    tiles.forEach((t, i) => {
-      if (t.dataset.locked === 'true') return;
-      const r = Math.floor(i / cols);
-      const c = i % cols;
-      const sz = getTileSize();
-      t.dataset.col = c;
-      t.dataset.row = r;
-      t.style.left = `${c * sz}px`;
-      t.style.top  = `${r * sz}px`;
-    });
+  // Import PNGs
+  controls.importBtn.addEventListener('click', () => controls.folderInput.click());
+  controls.folderInput.addEventListener('change', e => {
+    Array.from(e.target.files).filter(f=>f.type==='image/png').forEach(fileToTile);
+    controls.folderInput.value='';
   });
 
   // Export CSV
-  exportCSVBtn.addEventListener('click', () => {
-    const data = [['Position', 'TileName']];
-    canvas.querySelectorAll('.tile').forEach(t => {
-      const pos = +t.dataset.row * cols + +t.dataset.col + 1;
-      data.push([pos, t.dataset.name]);
+  controls.exportCSVBtn.addEventListener('click', () => {
+    const rowsArr=[['Position','TileName']];
+    document.querySelectorAll('.tile').forEach(t => {
+      rowsArr.push([+t.dataset.row*cols+ +t.dataset.col+1, t.dataset.name]);
     });
-    const csv = data.map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tiles.csv';
-    a.click();
+    const csv=rowsArr.map(r=>r.join(',')).join('\n');
+    const blob=new Blob([csv],{type:'text/csv'}), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='tiles.csv'; a.click(); URL.revokeObjectURL(url);
   });
 
-  // Export PNG (unchanged)
+  // Pinch-to-zoom
+  let startDist=0;
+  container.addEventListener('touchstart',e=>{
+    if(e.touches.length===2){ const dx=e.touches[0].clientX-e.touches[1].clientX; const dy=e.touches[0].clientY-e.touches[1].clientY; startDist=Math.hypot(dx,dy); }
+  });
+  container.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){ e.preventDefault(); const dx=e.touches[0].clientX-e.touches[1].clientX; const dy=e.touches[0].clientY-e.touches[1].clientY; const dist=Math.hypot(dx,dy); setZoom(zoomLevel*(dist/startDist)); startDist=dist; }
+  });
 
-  // Grid helper
-  function findFree(c0, r0, exclude = null) {
-    const occ = new Set();
-    canvas.querySelectorAll('.tile').forEach(t => { if (t !== exclude) occ.add(`${t.dataset.col},${t.dataset.row}`); });
-    if (!occ.has(`${c0},${r0}`)) return { col: c0, row: r0 };
-    for (let d = 1; d < cols * rows; d++) {
-      for (let dx = -d; dx <= d; dx++) {
-        const dy = d - Math.abs(dx);
-        for (const s of [dy, -dy]) {
-          const nc = c0 + dx;
-          const nr = r0 + s;
-          if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) continue;
-          if (!occ.has(`${nc},${nr}`)) return { col: nc, row: nr };
+  // Drag & Lock handlers
+  function attachEvents(tile) {
+    tile.addEventListener('pointerdown', e => {
+      if(tile.dataset.locked==='true') return;
+      activeTile = tile; offsetX=e.clientX-tile.offsetLeft; offsetY=e.clientY-tile.offsetTop;
+      tile.setPointerCapture(e.pointerId); tile.style.zIndex=1000; tile.style.cursor='grabbing';
+    });
+
+    tile.addEventListener('pointermove', e => {
+      if(activeTile!==tile) return;
+      const sz=getTileSize(); let x=e.clientX-offsetX, y=e.clientY-offsetY;
+      x=Math.max(0,Math.min(x,cols*sz-sz)); y=Math.max(0,Math.min(y,rows*sz-sz));
+      tile.style.left=`${x}px`; tile.style.top=`${y}px`;
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(() => {
+        const c=Math.round(parseInt(tile.style.left,10)/sz);
+        const r=Math.round(parseInt(tile.style.top,10)/sz);
+        const target=document.querySelector(`.tile[data-col='${c}'][data-row='${r}']`);
+        if(target && target!==tile && tile.dataset.locked==='false' && target.dataset.locked==='false') swapTiles(tile,c,r);
+      }, 1500);
+    });
+
+    tile.addEventListener('pointerup', e => {
+      if(activeTile!==tile) return;
+      clearTimeout(hoverTimer);
+      const sz=getTileSize(); const c=Math.round(parseInt(tile.style.left,10)/sz);
+      const r=Math.round(parseInt(tile.style.top,10)/sz);
+      swapTiles(tile,c,r);
+      tile.style.zIndex=''; tile.style.cursor='grab'; activeTile=null;
+    });
+
+    const lockBtn = tile.querySelector('.lock-btn');
+    if(lockBtn){
+      lockBtn.addEventListener('pointerdown', e=> e.stopPropagation());
+      lockBtn.innerHTML = LOCK_CLOSED_SVG;
+      lockBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isLocked = tile.dataset.locked==='true';
+        const newState = !isLocked;
+        tile.dataset.locked=newState.toString();
+        tile.classList.toggle('locked',newState);
+        lockBtn.innerHTML = newState ? LOCK_OPEN_SVG : LOCK_CLOSED_SVG;
+      });
+    }
+  }
+
+  // Swap helper
+  function swapTiles(t,col,row){
+    const sz=getTileSize();
+    const other=document.querySelector(`.tile[data-col='${col}'][data-row='${row}']`);
+    if(other && other!==t && other.dataset.locked==='false'){
+      const ocol=t.dataset.col, orow=t.dataset.row;
+      other.dataset.col=ocol; other.dataset.row=orow;
+      other.style.left=`${ocol*sz}px`; other.style.top=`${orow*sz}px`;
+    }
+    t.dataset.col=col; t.dataset.row=row;
+    t.style.left=`${col*sz}px`; t.style.top=`${row*sz}px`;
+  }
+
+  // File import & creation
+  function fileToTile(file){ const reader=new FileReader(); reader.onload=ev=>createTile(ev.target.result); reader.readAsDataURL(file); }
+  function createTile(src){
+    const id=++tileCounter;
+    const tile=document.createElement('div'); tile.className='tile';
+    tile.dataset.id=id; tile.dataset.name=`tile_${id}`; tile.dataset.locked='false';
+    tile.style.backgroundImage=`url(${src})`;
+    const {col,row}=findFree(0,0); const sz=getTileSize();
+    tile.dataset.col=col; tile.dataset.row=row;
+    tile.style.left=`${col*sz}px`; tile.style.top=`${row*sz}px`;
+    canvas.appendChild(tile);
+    const lb=document.createElement('button'); lb.className='tile-btn lock-btn'; lb.innerHTML=LOCK_CLOSED_SVG;
+    tile.appendChild(lb);
+    attachEvents(tile);
+  }
+
+  // Find next free cell
+  function findFree(c0,r0,exclude=null){
+    const occ=new Set();
+    canvas.querySelectorAll('.tile').forEach(t=>{ if(t!==exclude) occ.add(`${t.dataset.col},${t.dataset.row}`); });
+    if(!occ.has(`${c0},${r0}`)) return {col:c0,row:r0};
+    for(let d=1; d<cols*rows; d++){
+      for(let dx=-d; dx<=d; dx++){ const dy=d-Math.abs(dx);
+        for(const s of [dy,-dy]){
+          const nc=c0+dx, nr=r0+s;
+          if(nc<0||nr<0||nc>=cols||nr>=rows) continue;
+          if(!occ.has(`${nc},${nr}`)) return {col:nc,row:nr};
         }
       }
     }
-    return { col: c0, row: r0 };
+    return {col:c0,row:r0};
   }
+
 });
