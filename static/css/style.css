@@ -1,36 +1,60 @@
 :root {
-    --tile-size: 240px; /* each cell = 240×240px */
+    --tile-size: 240px;
     --zoom-step: 0.1;
   }
-  html, body { margin:0; padding:0; height:100%; font-family:sans-serif; }
-  #controls {
-    padding:0.5em; background:#fafafa; border-bottom:1px solid #ddd;
-    display:flex; gap:0.5em; align-items:center;
+  * { box-sizing:border-box; }
+  html, body {
+    margin:0; padding:0; height:100%; font-family:sans-serif;
   }
+  #controls {
+    display:flex; flex-wrap:wrap; align-items:center; padding:.5em;
+    background:#fafafa; border-bottom:1px solid #ddd; gap:.5em;
+  }
+  #controls input, #controls select { width:4em; }
   #canvas-container {
-    position:relative; 
-    width:100%; 
-    height:calc(100% - 50px);
-    background:#ecf0f1; 
-    overflow:auto;
-    transform-origin: top left;
+    position:relative; width:100%; height:calc(100% - 50px);
+    background:#ecf0f1; overflow:auto; display: flex;
   }
   #grid-canvas, #canvas { position:absolute; top:0; left:0; }
   .drop-zone.drag-over { background:rgba(200,220,255,0.5); }
   .tile {
-    position:absolute;
-    width:var(--tile-size);
-    height:var(--tile-size);
-    box-sizing:border-box;
-    border:2px solid #333;
-    border-radius:4px;
-    cursor:grab;
-    user-select:none;
-    overflow:hidden;
-    transition:left .2s, top .2s;
+    position:absolute; width:var(--tile-size); height:var(--tile-size);
+    border:2px solid #333; border-radius:4px; cursor:grab;
+    transition:left .2s, top .2s; opacity: 0.75;
   }
-  .tile.locked { opacity:0.5; cursor:default; }
-  .tile-btn { position:absolute; background:rgba(255,255,255,0.8);
-    border:none; padding:0.2em; cursor:pointer; font-size:1em;
+  .tile.locked { opacity:.5; cursor:default; }
+  .tile-btn {
+    position:absolute; top:4px; right:4px;
+    background:rgba(255, 0, 0, 0); border:none; padding:.2em;
+    font-size:1em; cursor:pointer; z-index: 1200;
   }
-  .lock-btn { top:4px; right:4px; }
+  /* Help Modal */
+  /* overlay */
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items:center; justify-content:center;
+    cursor: pointer;           /* clicking the overlay */
+  }
+  .modal-content {
+    position: relative;
+    background: #fff;
+    padding: 1em;
+    border-radius: 8px;
+    cursor: auto;              /* clicks inside don't close */
+  }
+  .modal.hidden { display: none; }
+  
+  /* opacity slider styling (optional) */
+  #opacityRange {
+    width: 100px;
+    margin-left: 0.5em;
+  }
+  
+  .close { position:absolute; top:.5em; right:.5em; cursor:pointer; }
+  @media (max-width:600px) {
+    #controls { font-size:.9em; }
+    .tile-btn { font-size:.8em; }
+  }
