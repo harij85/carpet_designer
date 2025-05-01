@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const gridCanvas   = $('#grid-canvas');
   const canvas       = $('#canvas');
   const container    = $('#canvas-container');
-  const opacityRange = $('#opacityRange');
+  //const opacityRange = $('#opacityRange');
   const controls = {
     importBtn:     $('#importBtn'),
     folderInput:   $('#folder-input'),
