@@ -190,13 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
        const tileData = Array.from(document.querySelectorAll('.tile')).map(t => ({
             position: (+t.dataset.row * cols) + (+t.dataset.col) +1,
             name: t.dataset.name
-       })));
+       }));
 
        // 2, sort by position ascending
        tileData.sort((a, b) => a.position - b.position);
 
        //3, build csv rows, starting with headers
-       const rowsArr = [['Position'. 'TileName'],
+       const rowsArr = [['Position', 'TileName'],
                         ...tileData.map(t => [t.position, t.name])];
 
        // 4, stringify & download
