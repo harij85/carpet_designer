@@ -23,10 +23,11 @@ const LOCK_OPEN_SVG = `
            a2.25 2.25 0 0 0 2.25 2.25Z" />
 </svg>`;
 
+
 // Configuration
 const BASE_TILE_SIZE = 240;
 const ZOOM_STEP      = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom-step'));
-let zoomLevel = 0.75;
+let zoomLevel       = 0.75;
 let cols = 4, rows = 4, tileCounter = 0;
 let activeTile = null, offsetX = 0, offsetY = 0, hoverTimer = null;
 const presets = JSON.parse(localStorage.getItem('presets') || '{}');
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = presets[e.target.value];
     if (!data) return;
     data.forEach(item => {
-      const tile = document.querySelector(`.tile[data-id='${item.id}']`);
+      const tile = canvas.querySelector(`.tile[data-id='${item.id}']`);
       if (tile) {
         tile.dataset.col = item.col;
         tile.dataset.row = item.row;
@@ -163,13 +164,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const sz  = getTileSize();
       const col = +tile.dataset.col;
       const row = +tile.dataset.row;
-
       Object.assign(tile.style, {
         left:    `${col * sz}px`,
         top:     `${row * sz}px`,
         width:   `${sz}px`,
         height:  `${sz}px`,
-        opacity: 0.75,            // fixed 75%
+        opacity: 0.75,
       });
     });
   }
@@ -226,10 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function attachEvents(tile) {
     tile.addEventListener('pointerdown', e => {
       if (tile.dataset.locked === 'true') return;
-
+      // remember last slot
       tile.dataset.prevCol = tile.dataset.col;
       tile.dataset.prevRow = tile.dataset.row;
-         
+
       activeTile = tile;
       offsetX    = e.clientX - tile.offsetLeft;
       offsetY    = e.clientY - tile.offsetTop;
@@ -241,8 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tile.addEventListener('pointermove', e => {
       if (activeTile !== tile) return;
       const sz = getTileSize();
-      let x = e.clientX - offsetX,
-          y = e.clientY - offsetY;
+      let x = e.clientX - offsetX;
+      let y = e.clientY - offsetY;
       x = Math.max(0, Math.min(x, cols * sz - sz));
       y = Math.max(0, Math.min(y, rows * sz - sz));
       tile.style.left = `${x}px`;
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(hoverTimer);
       hoverTimer = setTimeout(() => {
         const c      = Math.round(parseInt(tile.style.left,10) / sz);
-        const r      = Math.round(parseInt(tile.style.top,10) / sz);
+        const r      = Math.round(parseInt(tile.style.top,10)  / sz);
         const target = document.querySelector(`.tile[data-col='${c}'][data-row='${r}']`);
         if (target &&
             target !== tile &&
@@ -266,53 +266,53 @@ document.addEventListener('DOMContentLoaded', () => {
     tile.addEventListener('pointerup', e => {
       if (activeTile !== tile) return;
       clearTimeout(hoverTimer);
-         
+
       const sz = getTileSize();
       const c  = Math.round(parseInt(tile.style.left,10) / sz);
-      const r  = Math.round(parseInt(tile.style.top,10) / sz);
+      const r  = Math.round(parseInt(tile.style.top,10)  / sz);
 
       const occupant = document.querySelector(
-           `.tile[data-col='${c}'][data-row='${r}']`
-           );
+        `.tile[data-col='${c}'][data-row='${r}']`
+      );
 
-      if (occupant && occupant !== tile && occupant.dataset.locked === 'true) {
-          
-          //rebound: occupied by a locked tile
-      const prevC = + tile.dataset.prevCol;
-      const prevR = +tile.dataset.prevRow;
-      tile.dataset.col = prevC;
-      tile.dataset.row = prevR;
-      tile.style.left = `${prevC * sz}px`;
-      tile.style.top = `${prevR * sz}px`;
-         
-      } else if {
-         occupant && occupant !== tile && occupant.dataset.locked === 'false') {
+      // if you dropped on a locked tile, revert
+      if (occupant && occupant !== tile && occupant.dataset.locked === 'true') {
+        const prevC = +tile.dataset.prevCol;
+        const prevR = +tile.dataset.prevRow;
+        tile.dataset.col = prevC;
+        tile.dataset.row = prevR;
+        tile.style.left = `${prevC * sz}px`;
+        tile.style.top  = `${prevR * sz}px`;
 
-         swapTiles(tile, c, r);
-         } else {
-              tile.dataset.col = c;
-              tile.dataset.row = r;
-              tile.style.left = `${c * sz}px`;
-              tile.style.top = `${r * sz}px`;
+      // if you dropped on an unlocked tile, swap
+      } else if (occupant && occupant !== tile && occupant.dataset.locked === 'false') {
+        swapTiles(tile, c, r);
+
+      // otherwise just settle into the last free spot
+      } else {
+        tile.dataset.col = c;
+        tile.dataset.row = r;
+        tile.style.left = `${c * sz}px`;
+        tile.style.top  = `${r * sz}px`;
       }
-         
-      
+
       tile.style.zIndex = '';
       tile.style.cursor = 'grab';
-      activeTile        = null;
+      activeTile = null;
     });
 
+    // lock/unlock button
     const lockBtn = tile.querySelector('.lock-btn');
     if (lockBtn) {
       lockBtn.addEventListener('pointerdown', e => e.stopPropagation());
-      lockBtn.innerHTML = LOCK_OPEN_SVG;
+      lockBtn.innerHTML = LOCK_CLOSED_SVG;
       lockBtn.addEventListener('click', e => {
         e.stopPropagation();
-        const isLocked  = tile.dataset.locked === 'true';
-        const newState  = !isLocked;
+        const isLocked = tile.dataset.locked === 'true';
+        const newState = !isLocked;
         tile.dataset.locked = newState.toString();
         tile.classList.toggle('locked', newState);
-        lockBtn.innerHTML = newState ? LOCK_CLOSED_SVG : LOCK_OPEN_SVG;
+        lockBtn.innerHTML = newState ? LOCK_OPEN_SVG : LOCK_CLOSED_SVG;
       });
     }
   }
@@ -340,26 +340,28 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = ev => createTile(ev.target.result);
     reader.readAsDataURL(file);
   }
+
   function createTile(src) {
     const id   = ++tileCounter;
     const tile = document.createElement('div');
-    tile.className           = 'tile';
-    tile.dataset.id          = id;
-    tile.dataset.name        = `tile_${id}`;
-    tile.dataset.locked      = 'false';
+    tile.className = 'tile';
+    tile.dataset.id     = id;
+    tile.dataset.name   = `tile_${id}`;
+    tile.dataset.locked = 'false';
     tile.style.backgroundImage = `url(${src})`;
 
     const { col, row } = findFree(0, 0);
-    const sz           = getTileSize();
-    tile.dataset.col   = col;
-    tile.dataset.row   = row;
-    tile.style.left    = `${col * sz}px`;
-    tile.style.top     = `${row * sz}px`;
+    const sz = getTileSize();
+    tile.dataset.col = col;
+    tile.dataset.row = row;
+    tile.style.left  = `${col * sz}px`;
+    tile.style.top   = `${row * sz}px`;
 
     canvas.appendChild(tile);
+
     const lb = document.createElement('button');
     lb.className = 'tile-btn lock-btn';
-    lb.innerHTML = LOCK_OPEN_SVG;
+    lb.innerHTML = LOCK_CLOSED_SVG;
     tile.appendChild(lb);
 
     attachEvents(tile);
@@ -385,6 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return { col: c0, row: r0 };
   }
 
-  // **IMPORTANT**: draw the initial grid NOW that everything is wired up
+  // Draw the initial grid
   drawGrid();
 });
