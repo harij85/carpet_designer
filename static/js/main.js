@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const gridCanvas   = $('#grid-canvas');
   const canvas       = $('#canvas');
   const container    = $('#canvas-container');
-  //const opacityRange = $('#opacityRange');
+
   const controls = {
     importBtn:     $('#importBtn'),
     folderInput:   $('#folder-input'),
@@ -104,12 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Redraw
   function redraw() {
-    drawGrid(); const op = opacityRange?.value || 1;
+    drawGrid(); 
     document.querySelectorAll('.tile').forEach(tile => {
       const sz=getTileSize(), col=+tile.dataset.col, row=+tile.dataset.row;
       Object.assign(tile.style, {
         left: `${col*sz}px`, top: `${row*sz}px`,
-        width: `${sz}px`, height: `${sz}px`, opacity: op
+        width: `${sz}px`, height: `${sz}px`, opacity: 0.75
       });
     });
   }
