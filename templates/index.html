@@ -6,45 +6,36 @@
   <title>Carpet Tile Designer</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<style> 
-
-    li {
-        list-style: none;
-    }
+<style>
+  li { list-style: none; }
 
   .button {
-  background-color: #04AA6D; /* Green */
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-}
-
-  
+    background-color: #04AA6D; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
 </style>
 <body>
   <div id="controls">
-    
     <label>Rows: <input type="number" id="grid-rows" value="4" min="1"></label>
     <label>Cols: <input type="number" id="grid-cols" value="4" min="1"></label>
-    
 
-    <button id="setGridBtn" class="button">Set Grid</button>
-    
-    
-    <button id="zoomInBtn" class="button">➕</button>
-    <button id="zoomOutBtn" class="button">➖</button>
-    <button id="importBtn" class="button">📁 Import</button>
+    <button id="setGridBtn"    class="button">Set Grid</button>
+    <button id="zoomInBtn"     class="button">➕</button>
+    <button id="zoomOutBtn"    class="button">➖</button>
+    <button id="importBtn"     class="button">📁 Import</button>
     <input type="file" id="folder-input" webkitdirectory multiple accept="image/png" hidden>
-
     <button id="savePresetBtn" class="button">💾 Save Preset</button>
-    <select id="presetList" ><option value="">Load Preset</option></select>
-
-    <button id="helpBtn" class="button">❔ Help</button>
-    <button id="exportCSVBtn" class="button">⬇️ Export CSV</button>
+    <select id="presetList"    class="button">
+      <option value="">Load Preset</option>
+    </select>
+    <button id="helpBtn"       class="button">❔ Help</button>
+    <button id="exportCSVBtn"  class="button">⬇️ Export CSV</button>
   </div>
 
   <div id="canvas-container">
@@ -58,16 +49,14 @@
       <span id="closeHelp" class="close">×</span>
       <h2>Instructions</h2>
       <ul>
-        <h3> <strong>This is a demo. Presets will not save after app is closed.</strong></h3>
-        <li>1. Set grid size (Rows: y Cols: x) Click set grid. </li>
+        <h3><strong>This is a demo. Presets will not save after app is closed.</strong></h3>
+        <li>1. Set grid size (Rows: y Cols: x) Click set grid.</li>
         <li>2. Import folder of pngs. Best practice is to name pngs tile_1.png, tile_2.png etc</li>
-        
-       
         <li>3. Drag tiles (or lock them to freeze). Use + - toggles to zoom. Pinch to zoom on touch devices.</li>
-        <li>---To swap tile positions make sure both tiles are unlocked.</li> 
+        <li>---To swap tile positions make sure both tiles are unlocked.</li>
         <li>---Drag the tile you wish to move onto the tile you wish to replace and hold for 2s.</li>
         <li>4. Save/Load presets for layouts. You will have to import tiles first before seeing the preset load.</li>
-        <li>5. Export layout as CSV. You can use this to arrange your carpet</li>
+        <li>5. Export layout as CSV. You can use this to arrange your carpet.</li>
       </ul>
     </div>
   </div>
