@@ -233,4 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return {col:c0,row:r0};
   }
 
+  drawGrid();
+
 });
