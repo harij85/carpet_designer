@@ -208,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
        a.download = 'tiles.csv';
        a.click();
        URL.revokeObjectURL(url);
+       });
        
        
     /*const rowsArr = [['Position','TileName']];
@@ -225,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.download = 'tiles.csv';
     a.click();
     URL.revokeObjectURL(url);
-  }); */
+    });*/
 
   // Pinch-to-zoom
   let startDist = 0;
