@@ -226,6 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function attachEvents(tile) {
     tile.addEventListener('pointerdown', e => {
       if (tile.dataset.locked === 'true') return;
+
+      tile.dataset.prevCol = tile.dataset.col;
+      tile.dataset.prevRow = tile.dataset.row;
+         
       activeTile = tile;
       offsetX    = e.clientX - tile.offsetLeft;
       offsetY    = e.clientY - tile.offsetTop;
@@ -262,10 +266,37 @@ document.addEventListener('DOMContentLoaded', () => {
     tile.addEventListener('pointerup', e => {
       if (activeTile !== tile) return;
       clearTimeout(hoverTimer);
+         
       const sz = getTileSize();
       const c  = Math.round(parseInt(tile.style.left,10) / sz);
       const r  = Math.round(parseInt(tile.style.top,10) / sz);
-      swapTiles(tile, c, r);
+
+      const occupant = document.querySelector(
+           `.tile[data-col='${c}'][data-row='${r}']`
+           );
+
+      if (occupant && occupant !== tile && occupant.dataset.locked === 'true) {
+          
+          //rebound: occupied by a locked tile
+      const prevC = + tile.dataset.prevCol;
+      const prevR = +tile.dataset.prevRow;
+      tile.dataset.col = prevC;
+      tile.dataset.row = prevR;
+      tile.style.left = `${prevC * sz}px`;
+      tile.style.top = `${prevR * sz}px`;
+         
+      } else if {
+         occupant && occupant !== tile && occupant.dataset.locked === 'false') {
+
+         swapTiles(tile, c, r);
+         } else {
+              tile.dataset.col = c;
+              tile.dataset.row = r;
+              tile.style.left = `${c * sz}px`;
+              tile.style.top = `${r * sz}px`;
+      }
+         
+      
       tile.style.zIndex = '';
       tile.style.cursor = 'grab';
       activeTile        = null;
