@@ -387,6 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return { col: c0, row: r0 };
   }
 
+  document.documentElement.style.setProperty(
+  '--tile-size',
+  `${getTileSize()}px`
+  );
+
   // Draw the initial grid
   drawGrid();
-});
+  });
