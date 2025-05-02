@@ -185,7 +185,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Export CSV
   controls.exportCSVBtn.addEventListener('click', () => {
-    const rowsArr = [['Position','TileName']];
+
+       // 1, collect all tiles with their computed position
+       const tileData = Array.from(document.querySelectorAll('.tile')).map(t => ({
+            position: (+t.dataset.row * cols) + (+t.dataset.col) +1,
+            name: t.dataset.name
+       })));
+
+       // 2, sort by position ascending
+       tileData.sort((a, b) => a.position - b.position);
+
+       //3, build csv rows, starting with headers
+       const rowsArr = [['Position'. 'TileName'],
+                        ...tileData.map(t => [t.position, t.name])];
+
+       // 4, stringify & download
+       const csv  = rowsArr.map(r => r.join(',')).join('\n');
+       const blob = new Blob([csv], { type: 'text/csv' });
+       const url  = URL.createObjectURL(blob);
+       const a    = document.createElement('a');
+       a.href     = url;
+       a.download = 'tiles.csv';
+       a.click();
+       URL.revokeObjectURL(url);
+       
+       
+    /*const rowsArr = [['Position','TileName']];
     document.querySelectorAll('.tile').forEach(t => {
       rowsArr.push([
         +t.dataset.row * cols + +t.dataset.col + 1,
@@ -200,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.download = 'tiles.csv';
     a.click();
     URL.revokeObjectURL(url);
-  });
+  }); */
 
   // Pinch-to-zoom
   let startDist = 0;
