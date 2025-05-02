@@ -274,14 +274,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const lockBtn = tile.querySelector('.lock-btn');
     if (lockBtn) {
       lockBtn.addEventListener('pointerdown', e => e.stopPropagation());
-      lockBtn.innerHTML = LOCK_CLOSED_SVG;
+      lockBtn.innerHTML = LOCK_OPEN_SVG;
       lockBtn.addEventListener('click', e => {
         e.stopPropagation();
         const isLocked  = tile.dataset.locked === 'true';
         const newState  = !isLocked;
         tile.dataset.locked = newState.toString();
         tile.classList.toggle('locked', newState);
-        lockBtn.innerHTML = newState ? LOCK_OPEN_SVG : LOCK_CLOSED_SVG;
+        lockBtn.innerHTML = newState ? LOCK_CLOSED_SVG : LOCK_OPEN_SVG;
       });
     }
   }
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.appendChild(tile);
     const lb = document.createElement('button');
     lb.className = 'tile-btn lock-btn';
-    lb.innerHTML = LOCK_CLOSED_SVG;
+    lb.innerHTML = LOCK_OPEN_SVG;
     tile.appendChild(lb);
 
     attachEvents(tile);
