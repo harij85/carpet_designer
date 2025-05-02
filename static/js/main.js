@@ -337,16 +337,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // File import & creation
   function fileToTile(file) {
     const reader = new FileReader();
-    reader.onload = ev => createTile(ev.target.result);
+    reader.onload = ev => createTile(ev.target.result, file.name);
     reader.readAsDataURL(file);
   }
 
-  function createTile(src) {
+  function createTile(src, filename) {
     const id   = ++tileCounter;
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.dataset.id     = id;
-    tile.dataset.name   = `tile_${id}`;
+    tile.dataset.name   = filename;
+       
     tile.dataset.locked = 'false';
     tile.style.backgroundImage = `url(${src})`;
 
@@ -363,6 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
     lb.className = 'tile-btn lock-btn';
     lb.innerHTML = LOCK_OPEN_SVG;
     tile.appendChild(lb);
+
+    const label = document.createElement('div');
+    label.className = 'tile-label';
+    label.textContent = filename;
+    tile.appendChild(label);
 
     attachEvents(tile);
   }
