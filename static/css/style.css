@@ -22,7 +22,7 @@
     border:2px solid #333; border-radius:4px; cursor:grab;
     transition:left .2s, top .2s; opacity: 0.75;
   }
-  .tile.locked { opacity:.5; cursor:default; }
+  .tile.locked { opacity:1; cursor:default; }
   .tile-btn {
     position:absolute; top:4px; right:4px;
     background:rgba(255, 0, 0, 0); border:none; padding:.2em;
