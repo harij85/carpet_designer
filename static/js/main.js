@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         top:     `${row * sz}px`,
         width:   `${sz}px`,
         height:  `${sz}px`,
-        opacity: 0.75,
+        opacity: 1,
       });
     });
   }
