@@ -1,5 +1,5 @@
 :root {
-    --tile-size: 240px;
+    --tile-size: 900px;
     --zoom-step: 0.1;
   }
   * { box-sizing:border-box; }
