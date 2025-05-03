@@ -20,7 +20,7 @@
   .tile {
     position:absolute; width:var(--tile-size); height:var(--tile-size);
     border:none; border-radius:1px; cursor:grab;
-    transition:left .2s, top .2s; opacity: 0.75;
+    transition:left .2s, top .2s; opacity: 1;
   }
   .tile.locked { opacity:1; cursor:default; }
   .tile-btn {
