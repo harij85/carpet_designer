@@ -19,7 +19,7 @@
   .drop-zone.drag-over { background:rgba(200,220,255,0.5); }
   .tile {
     position:absolute; width:var(--tile-size); height:var(--tile-size);
-    border:2px solid #333; border-radius:4px; cursor:grab;
+    border:none; border-radius:1px; cursor:grab;
     transition:left .2s, top .2s; opacity: 0.75;
   }
   .tile.locked { opacity:1; cursor:default; }
