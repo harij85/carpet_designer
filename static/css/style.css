@@ -21,6 +21,9 @@
     position:absolute; width:var(--tile-size); height:var(--tile-size);
     border:none; border-radius:1px; cursor:grab;
     transition:left .2s, top .2s; opacity: 1;
+    background-repeat: no-repeat;
+    background-size: cover;  /* or “contain” if you prefer to see the whole image */
+}
   }
   .tile.locked { opacity:1; cursor:default; }
   .tile-btn {
