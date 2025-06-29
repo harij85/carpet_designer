@@ -25,9 +25,9 @@ const LOCK_OPEN_SVG = `
 
 
 // Configuration
-const BASE_TILE_SIZE = 900;
+const BASE_TILE_SIZE = 240;
 const ZOOM_STEP      = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom-step'));
-let zoomLevel       = 0.5;
+let zoomLevel       = 0.75;
 let cols = 4, rows = 4, tileCounter = 0;
 let activeTile = null, offsetX = 0, offsetY = 0, hoverTimer = null;
 const presets = JSON.parse(localStorage.getItem('presets') || '{}');
