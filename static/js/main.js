@@ -391,10 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
     lb.innerHTML = LOCK_OPEN_SVG;
     tile.appendChild(lb);
 
-    const label = document.createElement('div');
-    label.className = 'tile-label';
-    label.textContent = filename;
-    tile.appendChild(label);
+    // const label = document.createElement('div');
+    // label.className = 'tile-label';
+    // label.textContent = filename;
+    // tile.appendChild(label);
 
     attachEvents(tile);
   }
